@@ -48,6 +48,79 @@ app.post('/api/try/connect', (req, res) => {
     connection.end();
 })
 
+app.get('/api/database/:database/data', (req, res) => {
+    const connection = mysql.createConnection({
+        host: DBCONNECTION.serveur ?? 'localhost',
+        user: DBCONNECTION.user ?? 'root',
+        password: DBCONNECTION.pwd ?? 'root',
+        database: 'information_schema',
+        port: DBCONNECTION.port ?? 3306
+    });
+
+    connection.connect(err => {
+        if (!err) {
+            connection.query("SELECT * FROM `TABLES` WHERE `TABLE_SCHEMA` = ?;", [ req.params.database ], (err, result, fields) => {
+                if (err) {
+                    connection.end();
+                    return res.send({
+                        success: false,
+                        error: err
+                    })
+                }
+                return res.send({
+                    success: result
+                })
+            })
+        } else {
+            connection.end();
+            return res.send({
+                success: false,
+                error: err
+            })
+        }
+    });
+})
+
+app.get('/api/database/list', (req, res) => {
+    const connection = mysql.createConnection({
+        host: DBCONNECTION.serveur ?? 'localhost',
+        user: DBCONNECTION.user ?? 'root',
+        password: DBCONNECTION.pwd ?? 'root',
+        port: DBCONNECTION.port ?? 3306
+    });
+    const disabledDatabase = ['information_schema', 'mysql', 'performance_schema', 'sys'];
+
+    connection.connect(err => {
+        if (!err) {
+            connection.query("SHOW DATABASES;", (err, result, fields) => {
+                if (err) {
+                    connection.end();
+                    return res.send({
+                        success: false,
+                        error: err
+                    })
+                }
+
+                return res.send({
+                    success: result
+                        .filter((databaseName) => {
+                            return !disabledDatabase.includes(databaseName.Database)
+                        })
+                        .map((databaseName) => {
+                            return databaseName.Database
+                        })
+                })
+            })
+        } else {
+            connection.end();
+            return res.send({
+                success: false,
+                error: err
+            })
+        }
+    });
+})
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
