@@ -121,6 +121,42 @@ app.get('/api/database/list', (req, res) => {
     });
 })
 
+app.get('/api/database/:databaseName/:tableName/structure', (req, res) => {
+    const { params } = req
+
+    const connection = mysql.createConnection({
+        host: DBCONNECTION.serveur ?? 'localhost',
+        user: DBCONNECTION.user ?? 'root',
+        password: DBCONNECTION.pwd ?? 'root',
+        database: params.databaseName,
+        port: DBCONNECTION.port ?? 3306
+    });
+
+    connection.connect(err => {
+        if (!err) {
+            connection.query("DESCRIBE " + params.tableName, (err, result, fields) => {
+                if (err) {
+                    connection.end();
+                    return res.send({
+                        success: false,
+                        error: err
+                    })
+                }
+
+                return res.send({
+                    success: result
+                })
+            })
+        } else {
+            connection.end();
+            return res.send({
+                success: false,
+                error: err
+            })
+        }
+    });
+})
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
