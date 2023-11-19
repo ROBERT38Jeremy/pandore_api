@@ -170,14 +170,14 @@ app.get('/api/database/:databaseName/:tableName/datas', (req, res) => {
     });
 
     // contruction de la requête
-    let request = "SELECT * FROM " + params.tableName + "";
+    let request = "SELECT *\nFROM " + params.tableName + "";
     let bindings = [];
 
     if (conf?.limit && conf?.limit !== 'all') {
-        request += " LIMIT ?"
+        request += "\nLIMIT ?"
         bindings.push(conf.limit)
     } else {
-        request += " LIMIT 50"
+        request += "\nLIMIT 50"
     }
 
     connection.connect(err => {
