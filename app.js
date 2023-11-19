@@ -7,6 +7,8 @@ const app = express()
 const port = 3000
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(
     cors({
         credentials: true,
@@ -19,7 +21,6 @@ app.get('/', (req, res) => {
 })
 
 app.post('/api/try/connect', (req, res) => {
-    console.log(req.body);
     const body = req.body
     DBCONNECTION = body;
     const connection = mysql.createConnection({
@@ -32,13 +33,11 @@ app.post('/api/try/connect', (req, res) => {
 
     connection.connect(err => {
         if (err) {
-            console.log('connection failed')
             res.send({
                 success: false,
                 error: err
             })
         } else {
-            console.log('connection succeed')
             res.send({
                 success: true,
             })
@@ -157,7 +156,7 @@ app.get('/api/database/:databaseName/:tableName/structure', (req, res) => {
     });
 })
 
-app.get('/api/database/:databaseName/:tableName/datas', (req, res) => {
+app.post('/api/database/:databaseName/:tableName/datas', (req, res) => {
     const { params } = req
     const conf = req.body
 
@@ -166,23 +165,39 @@ app.get('/api/database/:databaseName/:tableName/datas', (req, res) => {
         user: DBCONNECTION.user ?? 'root',
         password: DBCONNECTION.pwd ?? 'root',
         database: params.databaseName,
-        port: DBCONNECTION.port ?? 3306
+        port: DBCONNECTION.port ?? 3306,
+        dateStrings: 'date'
     });
 
     // contruction de la requête
-    let request = "SELECT *\nFROM " + params.tableName + "";
+    let request = "SELECT * FROM " + params.tableName + " WHERE 1";
     let bindings = [];
 
+    if (conf.where) {
+        for(const [key, value] of Object.entries(conf.where)) {
+            request += ` AND ${key} = ?`;
+            bindings.push(value);
+        }
+    }
+
     if (conf?.limit && conf?.limit !== 'all') {
-        request += "\nLIMIT ?"
-        bindings.push(conf.limit)
+        request += " LIMIT ?"
+        bindings.push(parseInt(conf.limit));
     } else {
-        request += "\nLIMIT 50"
+        request += " LIMIT 50"
+    }
+    request += ";"
+
+    let bindedRequest = request;
+    if ((request.match(/\?/g) || []).length === bindings.length) {
+        for(let i = 0; i < (request.match(/\?/g) || []).length; i++) {
+            bindedRequest = bindedRequest.replace('?', bindings[i]);
+        }
     }
 
     connection.connect(err => {
         if (!err) {
-            connection.query(request, bindings, (err, result, fields) => {
+            connection.query(request, bindings, async (err, result, fields, query) => {
                 if (err) {
                     connection.end();
                     return res.send({
@@ -191,10 +206,55 @@ app.get('/api/database/:databaseName/:tableName/datas', (req, res) => {
                     })
                 }
 
-                return res.send({
-                    request: request,
-                    success: result,
-                })
+                const connection2 = mysql.createConnection({
+                    host: DBCONNECTION.serveur ?? 'localhost',
+                    user: DBCONNECTION.user ?? 'root',
+                    password: DBCONNECTION.pwd ?? 'root',
+                    database: 'information_schema',
+                    port: DBCONNECTION.port ?? 3306
+                });
+
+                const constraintsQuery = `
+                SELECT rc.TABLE_NAME, ifc.FOR_COL_NAME, rc.REFERENCED_TABLE_NAME, ifc.REF_COL_NAME
+                FROM TABLE_CONSTRAINTS tb
+                JOIN INNODB_FOREIGN_COLS ifc
+                    ON ifc.ID = CONCAT(tb.CONSTRAINT_SCHEMA, '/', tb.CONSTRAINT_NAME)
+                JOIN REFERENTIAL_CONSTRAINTS rc
+                    ON rc.CONSTRAINT_NAME = tb.CONSTRAINT_NAME
+
+                WHERE tb.TABLE_SCHEMA = '${params.databaseName}'
+                    AND tb.TABLE_NAME = '${params.tableName}'
+                    AND tb.CONSTRAINT_TYPE = 'FOREIGN KEY'
+                `;
+
+                connection2.connect(err => {
+                    if (!err) {
+                        connection2.query(constraintsQuery, async (err, result2, fields) => {
+                            if (err) {
+                                connection2.end();
+                                return res.send({
+                                    success: false,
+                                    error: err
+                                })
+                            }
+
+                            return res.send({
+                                request: bindedRequest,
+                                constraints: result2,
+                                success: result,
+                            })
+
+                        })
+                    } else {
+                        connection2.end();
+                        return res.send({
+                            success: false,
+                            error: err
+                        })
+                    }
+                });
+
+
             })
         } else {
             connection.end();
