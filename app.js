@@ -157,6 +157,55 @@ app.get('/api/database/:databaseName/:tableName/structure', (req, res) => {
     });
 })
 
+app.get('/api/database/:databaseName/:tableName/datas', (req, res) => {
+    const { params } = req
+    const conf = req.body
+
+    const connection = mysql.createConnection({
+        host: DBCONNECTION.serveur ?? 'localhost',
+        user: DBCONNECTION.user ?? 'root',
+        password: DBCONNECTION.pwd ?? 'root',
+        database: params.databaseName,
+        port: DBCONNECTION.port ?? 3306
+    });
+
+    // contruction de la requête
+    let request = "SELECT * FROM " + params.tableName + "";
+    let bindings = [];
+
+    if (conf?.limit && conf?.limit !== 'all') {
+        request += " LIMIT ?"
+        bindings.push(conf.limit)
+    } else {
+        request += " LIMIT 50"
+    }
+
+    connection.connect(err => {
+        if (!err) {
+            connection.query(request, bindings, (err, result, fields) => {
+                if (err) {
+                    connection.end();
+                    return res.send({
+                        success: false,
+                        error: err
+                    })
+                }
+
+                return res.send({
+                    request: request,
+                    success: result,
+                })
+            })
+        } else {
+            connection.end();
+            return res.send({
+                success: false,
+                error: err
+            })
+        }
+    });
+})
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
