@@ -2,7 +2,7 @@ const { MysqlDB } = require("../../database/database")
 
 exports.tryConnection = (req, res, _) => {
     const DB = MysqlDB.getInstance(req.body);
-    if (DB === null || DB?.connection === null) {
+    if (DB === null) {
         return res.send({
             success: false,
             error: 'Connection failed'
