@@ -10,8 +10,7 @@ exports.getTableStrucure = async (req, res, _) => {
         })
     }
     await DB.connection.query(`USE ${params.databaseName};`);
-
-    const result = await new Promise((resolve, reject) => {
+    const resultStructure = await new Promise((resolve, reject) => {
         DB.connection.query("DESCRIBE " + params.tableName, (err, result, fields) => {
             if (err) {
                 return reject({
@@ -25,8 +24,82 @@ exports.getTableStrucure = async (req, res, _) => {
             })
         })
     })
+    if (resultStructure.success === false) {
+        return res.send({
+            success: false,
+            error: 'Failed to get structure Table'
+        })
+    }
 
-    return res.send(result)
+    // Récupération des clé étrangères
+    const constraintsQuery = `
+        SELECT rc.CONSTRAINT_NAME, ifc.FOR_COL_NAME, ifc.REF_COL_NAME, rc.UPDATE_RULE, rc.DELETE_RULE, rc.REFERENCED_TABLE_NAME
+        FROM REFERENTIAL_CONSTRAINTS rc
+        JOIN INNODB_FOREIGN_COLS ifc
+            ON ifc.ID = CONCAT(rc.CONSTRAINT_SCHEMA, '/', rc.CONSTRAINT_NAME)
+        WHERE rc.CONSTRAINT_SCHEMA = '${params.databaseName}'
+            AND rc.TABLE_NAME = '${params.tableName}'
+    `;
+    await DB.connection.query(`USE information_schema;`);
+    const constraintResult = await new Promise((resolve, reject) => {
+        DB.connection.query(constraintsQuery, (err, result, fields) => {
+            if (err) {
+                return reject({
+                    success: false,
+                    error: err
+                })
+            }
+
+            return resolve({
+                success: result,
+            })
+        })
+    })
+    if (constraintResult.success === false) {
+        return res.send({
+            success: false,
+            error: 'Failed to get structure Table'
+        })
+    }
+
+    // Récupération des index
+    const indexQuery = `
+        SELECT kcu.COLUMN_NAME, tc.CONSTRAINT_TYPE
+        FROM TABLE_CONSTRAINTS tc
+        JOIN KEY_COLUMN_USAGE kcu
+            ON kcu.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA
+            AND kcu.TABLE_NAME = tc.TABLE_NAME
+            AND kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+        WHERE tc.CONSTRAINT_SCHEMA = '${params.databaseName}'
+            AND tc.TABLE_NAME = '${params.tableName}'
+    `;
+    await DB.connection.query(`USE information_schema;`);
+    const indexResult = await new Promise((resolve, reject) => {
+        DB.connection.query(indexQuery, (err, result, fields) => {
+            if (err) {
+                return reject({
+                    success: false,
+                    error: err
+                })
+            }
+
+            return resolve({
+                success: result,
+            })
+        })
+    })
+    if (indexResult.success === false) {
+        return res.send({
+            success: false,
+            error: 'Failed to get Table\'s indexes'
+        })
+    }
+
+    return res.send({
+        success: resultStructure.success,
+        foreign: constraintResult.success,
+        index: indexResult.success,
+    })
 }
 
 exports.getTableDatas = async (req, res, _) => {
@@ -98,13 +171,13 @@ exports.getTableDatas = async (req, res, _) => {
     const resultForeign = await new Promise((resolve, reject) => {
         DB.connection.query(constraintsQuery, (err, result, fields) => {
             if (err) {
-                return res.send({
+                return reject({
                     success: false,
                     error: err
                 })
             }
 
-            return res.send({
+            return resolve({
                 request: bindedRequest,
                 constraints: result,
                 success: resultDatas.success,
