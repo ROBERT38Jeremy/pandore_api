@@ -1,8 +1,8 @@
 const { MysqlDB } = require("../../database/database")
 
-exports.TryConnection = (req, res, _) => {
+exports.tryConnection = (req, res, _) => {
     const DB = MysqlDB.getInstance(req.body);
-    if (DB === null) {
+    if (DB === null || DB?.connection === null) {
         return res.send({
             success: false,
             error: 'Connection failed'
@@ -12,4 +12,10 @@ exports.TryConnection = (req, res, _) => {
             success: true,
         })
     }
+}
+
+exports.backendIsConnected = (req, res, _) => {
+    return res.send({
+        success: MysqlDB.instanceExists(),
+    })
 }

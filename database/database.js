@@ -8,6 +8,14 @@ class MysqlDB {
 
     constructor() {}
 
+    static instanceExists() {
+        if (!this.instance || this.connection == null) {
+            return false
+        } else {
+            return true;
+        }
+    }
+
     static getInstance(DBCONNECTION = {}) {
         if (!this.instance) {
             this.instance = new MysqlDB();
@@ -19,6 +27,13 @@ class MysqlDB {
 
     init() {
         try {
+            if (
+                !this.connectionBody.serveur ||
+                !this.connectionBody.user ||
+                !this.connectionBody.pwd
+            ) {
+                return this.connection = null;
+            }
             this.connection = mysql.createConnection({
                 host: this.connectionBody?.serveur,
                 user: this.connectionBody?.user,

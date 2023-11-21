@@ -2,7 +2,7 @@ const { MysqlDB } = require("../../database/database")
 
 exports.getDatabaseStrucure = async (req, res, _) => {
     const DB = MysqlDB.getInstance();
-    if (DB === null) {
+    if (DB === null || DB?.connection === null) {
         return res.send({
             success: false,
             error: 'Connection failed'
@@ -31,7 +31,7 @@ exports.getDatabaseStrucure = async (req, res, _) => {
 
 exports.getDatabasesList = async (req, res, _) => {
     const DB = MysqlDB.getInstance();
-    if (DB === null) {
+    if (DB === null || DB?.connection === null) {
         return res.send({
             success: false,
             error: 'Connection failed'
