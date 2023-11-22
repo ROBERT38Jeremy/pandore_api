@@ -41,7 +41,6 @@ exports.getDatabasesList = async (req, res, _) => {
     const result = await new Promise((resolve, reject) => {
         DB.connection.query("SHOW DATABASES;", (err, result, fields) => {
             if (err) {
-                connection.end();
                 return reject({
                     success: false,
                     error: err
