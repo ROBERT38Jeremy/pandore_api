@@ -1,4 +1,5 @@
 const { MysqlDB } = require("../../database/database")
+const { getConf } = require("../../utils/pandoreConf")
 
 exports.getDatabaseStrucure = async (req, res, _) => {
     const DB = MysqlDB.getInstance();
@@ -30,6 +31,7 @@ exports.getDatabaseStrucure = async (req, res, _) => {
 }
 
 exports.getDatabasesList = async (req, res, _) => {
+    const pandoreConf = await getConf();
     const DB = MysqlDB.getInstance();
     if (DB === null || DB?.connection === null) {
         return res.send({
@@ -37,7 +39,7 @@ exports.getDatabasesList = async (req, res, _) => {
             error: 'Connection failed'
         })
     }
-    const disabledDatabase = ['information_schema', 'mysql', 'performance_schema', 'sys'];
+    const disabledDatabase = pandoreConf?.databases?.hidden ?? ['information_schema', 'mysql', 'performance_schema', 'sys'];
     const result = await new Promise((resolve, reject) => {
         DB.connection.query("SHOW DATABASES;", (err, result, fields) => {
             if (err) {
