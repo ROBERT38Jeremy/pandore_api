@@ -178,12 +178,41 @@ exports.getTableDatas = async (req, res, _) => {
             }
 
             return resolve({
+                success: result,
+            })
+        })
+    })
+
+    // Récupération des index
+    const indexQuery = `
+        SELECT kcu.COLUMN_NAME
+        FROM TABLE_CONSTRAINTS tc
+        JOIN KEY_COLUMN_USAGE kcu
+            ON kcu.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA
+            AND kcu.TABLE_NAME = tc.TABLE_NAME
+            AND kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+        WHERE tc.CONSTRAINT_SCHEMA = '${params.databaseName}'
+            AND tc.TABLE_NAME = '${params.tableName}'
+            AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+    `;
+    await DB.connection.query(`USE information_schema;`);
+    const resultIndex = await new Promise((resolve, reject) => {
+        DB.connection.query(indexQuery, (err, result, fields) => {
+            if (err) {
+                return reject({
+                    success: false,
+                    error: err
+                })
+            }
+
+            return resolve({
+                primary: result,
                 request: bindedRequest,
-                constraints: result,
+                constraints: resultForeign.success,
                 success: resultDatas.success,
             })
         })
     })
 
-    return res.send(resultForeign)
+    return res.send(resultIndex)
 }
