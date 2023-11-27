@@ -9,7 +9,7 @@ class MysqlDB {
     constructor() {}
 
     static instanceExists() {
-        if (!this.instance) {
+        if (!this.instance || !this.instance?.connectionBody) {
             return false
         } else {
             return true;
