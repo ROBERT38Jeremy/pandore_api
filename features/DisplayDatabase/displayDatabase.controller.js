@@ -119,5 +119,5 @@ exports.getDatabasesMenuList = async (req, res, _) => {
 
     setTimeout(() => {
         return res.send({ success: databaseMenuList })
-    }, 300)
+    }, 500)
 }
