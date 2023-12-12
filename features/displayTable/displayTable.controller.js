@@ -155,6 +155,21 @@ exports.getTableDatas = async (req, res, _) => {
         })
     })
 
+    const resultStructure = await new Promise((resolve, reject) => {
+        DB.connection.query("DESCRIBE " + params.tableName, (err, result, fields) => {
+            if (err) {
+                return reject({
+                    success: false,
+                    error: err
+                })
+            }
+
+            return resolve({
+                success: result
+            })
+        })
+    })
+
     const constraintsQuery = `
         SELECT rc.TABLE_NAME, ifc.FOR_COL_NAME, rc.REFERENCED_TABLE_NAME, ifc.REF_COL_NAME
         FROM TABLE_CONSTRAINTS tb
@@ -209,6 +224,7 @@ exports.getTableDatas = async (req, res, _) => {
                 primary: result,
                 request: bindedRequest,
                 constraints: resultForeign.success,
+                structure: resultStructure.success,
                 success: resultDatas.success,
             })
         })
