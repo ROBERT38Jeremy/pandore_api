@@ -140,7 +140,6 @@ exports.getTableDatas = async (req, res, _) => {
             bindedRequest = bindedRequest.replace('?', bindings[i]);
         }
     }
-    console.log(bindedRequest);
 
     await DB.connection.query(`USE ${params.databaseName};`);
     const resultDatas = await new Promise((resolve, reject) => {
