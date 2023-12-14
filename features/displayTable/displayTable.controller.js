@@ -121,8 +121,12 @@ exports.getTableDatas = async (req, res, _) => {
 
     if (conf.where) {
         conf.where.forEach((statement) => {
-            request += ` AND ${statement.field} ${statement.operator} ?`;
-            bindings.push(statement.value);
+            if (!['IS NULL', 'IS NOT NULL'].includes(statement.operator)) {
+                request += ` AND ${statement.field} ${statement.operator} ?`;
+                bindings.push(statement.value);
+            } else {
+                request += ` AND ${statement.field} ${statement.operator}`;
+            }
         });
     }
 
