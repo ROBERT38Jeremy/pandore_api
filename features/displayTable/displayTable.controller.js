@@ -113,17 +113,17 @@ exports.getTableDatas = async (req, res, _) => {
         })
     }
 
-    const querySelect = (conf.select) ? conf.select.join(', ') : '*';
+    const querySelect = (conf.select || []).length > 0 ? conf.select.join(', ') : '*';
 
     // contruction de la requête
     let request = `SELECT ${querySelect} FROM ${params.tableName} WHERE 1`;
     let bindings = [];
 
     if (conf.where) {
-        for(const [key, value] of Object.entries(conf.where)) {
-            request += ` AND ${key} = ?`;
-            bindings.push(value);
-        }
+        conf.where.forEach((statement) => {
+            request += ` AND ${statement.field} ${statement.operator} ?`;
+            bindings.push(statement.value);
+        });
     }
 
     if (conf?.limit && conf?.limit !== 'all') {
@@ -140,6 +140,7 @@ exports.getTableDatas = async (req, res, _) => {
             bindedRequest = bindedRequest.replace('?', bindings[i]);
         }
     }
+    console.log(bindedRequest);
 
     await DB.connection.query(`USE ${params.databaseName};`);
     const resultDatas = await new Promise((resolve, reject) => {
