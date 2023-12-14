@@ -113,8 +113,10 @@ exports.getTableDatas = async (req, res, _) => {
         })
     }
 
+    const querySelect = (conf.select) ? conf.select.join(', ') : '*';
+
     // contruction de la requête
-    let request = "SELECT * FROM " + params.tableName + " WHERE 1";
+    let request = `SELECT ${querySelect} FROM ${params.tableName} WHERE 1`;
     let bindings = [];
 
     if (conf.where) {
