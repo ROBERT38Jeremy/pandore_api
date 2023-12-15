@@ -227,6 +227,7 @@ exports.getTableDatas = async (req, res, _) => {
             }
 
             return resolve({
+                conf: conf,
                 primary: result,
                 request: bindedRequest,
                 constraints: resultForeign.success,
