@@ -1,4 +1,5 @@
 const { MysqlDB } = require("../../database/database")
+const { getConf } = require("../../utils/pandoreConf")
 
 exports.getTableStrucure = async (req, res, _) => {
     const { params } = req
@@ -103,6 +104,8 @@ exports.getTableStrucure = async (req, res, _) => {
 }
 
 exports.getTableDatas = async (req, res, _) => {
+    const pandoreConf = await getConf();
+    console.log(pandoreConf?.conf?.tables?.query?.defaultLimit)
     const { params } = req
     const conf = req.body
     const DB = MysqlDB.getInstance();
@@ -133,6 +136,8 @@ exports.getTableDatas = async (req, res, _) => {
     if (conf?.limit && conf?.limit !== 'all') {
         request += " LIMIT ?"
         bindings.push(parseInt(conf.limit));
+    } else if (pandoreConf?.conf?.tables?.query?.defaultLimit) {
+        request += ` LIMIT ${pandoreConf.conf.tables.query.defaultLimit}`
     } else {
         request += " LIMIT 50"
     }

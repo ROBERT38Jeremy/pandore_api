@@ -40,7 +40,7 @@ exports.getDatabasesList = async (req, res, _) => {
             error: 'Connection failed'
         })
     }
-    const disabledDatabase = pandoreConf?.databases?.hidden ?? defaultHiddenDatabases;
+    const disabledDatabase = pandoreConf?.conf?.databases?.hidden ?? defaultHiddenDatabases;
     const result = await new Promise((resolve, reject) => {
         DB.connection.query("SHOW DATABASES;", (err, result, fields) => {
             if (err) {
@@ -75,7 +75,7 @@ exports.getDatabasesMenuList = async (req, res, _) => {
         })
     }
     const databaseMenuList = {};
-    const disabledDatabase = pandoreConf?.databases?.hidden ?? defaultHiddenDatabases;
+    const disabledDatabase = pandoreConf?.conf?.databases?.hidden ?? defaultHiddenDatabases;
     const databaseList = await new Promise((resolve, reject) => {
         DB.connection.query("SHOW DATABASES;", (err, result, fields) => {
             if (err) {
