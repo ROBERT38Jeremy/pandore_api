@@ -105,7 +105,7 @@ exports.getTableStrucure = async (req, res, _) => {
 
 exports.getTableDatas = async (req, res, _) => {
     const pandoreConf = await getConf();
-    console.log(pandoreConf?.conf?.tables?.query?.defaultLimit)
+
     const { params } = req
     const conf = req.body
     const DB = MysqlDB.getInstance();
