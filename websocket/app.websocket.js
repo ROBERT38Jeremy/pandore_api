@@ -10,7 +10,7 @@ const pandoreWebsocket = (wss) => {
                 ws.send(JSON.stringify(result));
 
                 if (ws.readyState === 1 && result?.success !== false) {
-                    setTimeout(sendDatas, 10000)
+                    setTimeout(sendDatas, 5000)
                 }
             }
             sendDatas()
