@@ -25,6 +25,11 @@ class MysqlDB {
         return this.instance;
     }
 
+    static removeInstance() {
+        this.instance.connectionBody = null;
+        this.instance                = null;
+    }
+
     init() {
         try {
             if (
@@ -32,6 +37,8 @@ class MysqlDB {
                 !this.connectionBody.user ||
                 !this.connectionBody.pwd
             ) {
+                this.instance          = null;
+                this.connectionBody    = null;
                 return this.connection = null;
             }
             this.connection = mysql.createConnection({

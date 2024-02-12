@@ -19,3 +19,8 @@ exports.backendIsConnected = (req, res, _) => {
         success: MysqlDB.instanceExists(),
     })
 }
+
+exports.disconnect = (req, res, _) => {
+    MysqlDB.removeInstance();
+    return res.send({ success: true })
+}
