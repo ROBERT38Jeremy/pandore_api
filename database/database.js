@@ -38,8 +38,6 @@ class MysqlDB {
                 !this.connectionBody.pwd
             ) {
                 this.instance          = null;
-                this.connectionBody    = null;
-                return this.connection = null;
             }
             this.connection = mysql.createConnection({
                 host: this.connectionBody?.serveur,
