@@ -1,5 +1,5 @@
 const fs = require('fs');
-const pandoreConfFile = '../oneapp_front/config/PandoreUserConf.json';
+const pandoreConfFile = '../pandore_front/config/PandoreUserConf.json';
 
 exports.getConf = async () => {
     if (fs.existsSync(pandoreConfFile) !== true) {
