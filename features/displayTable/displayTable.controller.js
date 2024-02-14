@@ -250,3 +250,104 @@ exports.getTableDatas = async (req, res, _) => {
         return res.send({ error: error?.sqlMessage ?? error })
     }
 }
+
+exports.getDatabaseTablesStructure = async (req, res, _) => {
+    try {
+
+        const { params } = req
+        const DB = MysqlDB.getInstance();
+        if (DB === null || DB?.connection === null) {
+            return res.send({
+                success: false,
+                error: 'Connection failed'
+            })
+        }
+
+        const tableNumberQuery = `
+            SELECT COUNT(*) AS nb_table
+            FROM TABLES t
+            WHERE t.TABLE_SCHEMA = '${params.databaseName}'
+        `;
+        await DB.connection.query(`USE information_schema;`);
+        const resultTableNumber = await new Promise((resolve, reject) => {
+            DB.connection.query(tableNumberQuery, (err, result, fields) => {
+                if (err) {
+                    return reject({
+                        success: false,
+                        error: err
+                    })
+                }
+
+                if (result[0].nb_table > 10) {
+                    return resolve({
+                        success: false,
+                        error: 'Too many tables'
+                    })
+                }
+
+                return resolve({
+                    success: result,
+                })
+            })
+        })
+
+        if (resultTableNumber.success === false) {
+            return res.send({
+                success: false,
+                error: resultTableNumber.error
+            })
+        }
+
+        const query = `
+            SELECT
+                t.TABLE_NAME,
+                c.COLUMN_NAME,
+                c.COLUMN_TYPE,
+                c.COLUMN_KEY,
+                c.Extra,
+                kcu.REFERENCED_TABLE_NAME,
+                kcu.REFERENCED_COLUMN_NAME
+            FROM TABLES t
+            JOIN COLUMNS c
+                ON c.TABLE_SCHEMA = t.TABLE_SCHEMA
+                AND c.TABLE_NAME = t.TABLE_NAME
+            LEFT JOIN KEY_COLUMN_USAGE kcu
+                ON kcu.TABLE_SCHEMA = t.TABLE_SCHEMA
+                AND kcu.TABLE_NAME = c.TABLE_NAME
+                AND kcu.COLUMN_NAME = c.COLUMN_NAME
+                AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
+            WHERE t.TABLE_SCHEMA = '${params.databaseName}'
+            ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION;`;
+
+        await DB.connection.query(`USE INFORMATION_SCHEMA;`);
+        const resultStructure = await new Promise((resolve, reject) => {
+            DB.connection.query(query, (err, result, fields) => {
+                if (err) {
+                    return reject({
+                        success: false,
+                        error: err
+                    })
+                }
+
+                return resolve({
+                    success: result
+                })
+            })
+        })
+        if (resultStructure.success === false) {
+            return res.send({
+                success: false,
+                error: 'Failed to get structure Table'
+            })
+        }
+        return res.send({
+            success: resultStructure.success
+        })
+    } catch (error) {
+        console.log(error);
+        return res.send({
+            success: false,
+            error: 'Somthing went Wrong'
+        })
+    }
+}
