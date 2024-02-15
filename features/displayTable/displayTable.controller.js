@@ -120,10 +120,11 @@ exports.getTableDatas = async (req, res, _) => {
         const querySelect = (conf.select || []).length > 0 ? conf.select.join(', ') : '*';
 
         // contruction de la requête
-        let request = `SELECT ${querySelect} FROM ${params.tableName} WHERE 1`;
+        let request = `SELECT ${querySelect} FROM ${params.tableName}`;
         let bindings = [];
 
         if ((conf?.where || []).length > 0) {
+            request += '  WHERE 1';
             conf.where.forEach((statement) => {
                 if (!['IS NULL', 'IS NOT NULL'].includes(statement.operator)) {
                     request += ` AND ${statement.field} ${statement.operator} ?`;
@@ -133,16 +134,18 @@ exports.getTableDatas = async (req, res, _) => {
                 }
             });
         } else if (conf?.whereString) {
-            request += ` AND ${conf?.whereString}`;
+            request += ` WHERE ${conf?.whereString}`;
         }
 
-        if (conf?.limit && conf?.limit !== 'all') {
-            request += " LIMIT ?"
-            bindings.push(parseInt(conf.limit));
-        } else if (pandoreConf?.conf?.tables?.query?.defaultLimit) {
-            request += ` LIMIT ${pandoreConf.conf.tables.query.defaultLimit}`
-        } else {
-            request += " LIMIT 50"
+        if ((conf?.whereString || "").toLowerCase().includes('limit') === false) {
+            if (conf?.limit && conf?.limit !== 'all') {
+                request += " LIMIT ?"
+                bindings.push(parseInt(conf.limit));
+            } else if (pandoreConf?.conf?.tables?.query?.defaultLimit) {
+                request += ` LIMIT ${pandoreConf.conf.tables.query.defaultLimit}`
+            } else {
+                request += " LIMIT 50"
+            }
         }
         request += ";"
 
