@@ -123,7 +123,7 @@ exports.getTableDatas = async (req, res, _) => {
         let request = `SELECT ${querySelect} FROM ${params.tableName} WHERE 1`;
         let bindings = [];
 
-        if (conf.where) {
+        if ((conf?.where || []).length > 0) {
             conf.where.forEach((statement) => {
                 if (!['IS NULL', 'IS NOT NULL'].includes(statement.operator)) {
                     request += ` AND ${statement.field} ${statement.operator} ?`;
@@ -132,6 +132,8 @@ exports.getTableDatas = async (req, res, _) => {
                     request += ` AND ${statement.field} ${statement.operator}`;
                 }
             });
+        } else if (conf?.whereString) {
+            request += ` AND ${conf?.whereString}`;
         }
 
         if (conf?.limit && conf?.limit !== 'all') {
