@@ -136,17 +136,6 @@ exports.getTableDatas = async (req, res, _) => {
         } else if (conf?.whereString) {
             request += ` WHERE ${conf?.whereString}`;
         }
-
-        if ((conf?.whereString || "").toLowerCase().includes('limit') === false) {
-            if (conf?.limit && conf?.limit !== 'all') {
-                request += " LIMIT ?"
-                bindings.push(parseInt(conf.limit));
-            } else if (pandoreConf?.conf?.tables?.query?.defaultLimit) {
-                request += ` LIMIT ${pandoreConf.conf.tables.query.defaultLimit}`
-            } else {
-                request += " LIMIT 50"
-            }
-        }
         request += ";"
 
         let bindedRequest = request;
