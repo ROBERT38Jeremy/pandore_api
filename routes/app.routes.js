@@ -11,7 +11,7 @@ const expressMiddlewareRoutes = (app) => {
 		return res.status(200).json({ success: "Welcome to lamusee's API" });
 	});
 
-	app.use("/api", [ConnectionRoutes, displayDatabaseRoutes, displayTableRoutes, tableDatasRoutes, rawQueryRoutes, userRoutes, pandoreUserRoutes]);
+	app.use("/api/sql", [ConnectionRoutes, displayDatabaseRoutes, displayTableRoutes, tableDatasRoutes, rawQueryRoutes, userRoutes, pandoreUserRoutes]);
 };
 
 module.exports = { expressMiddlewareRoutes };
