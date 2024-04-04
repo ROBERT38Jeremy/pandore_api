@@ -100,7 +100,7 @@ exports.getDatabasesMenuList = async (req, res, _) => {
         return res.send(databaseList)
     }
 
-    databaseList.success.forEach(async (db) => {
+    for (const db of databaseList.success) {
         await DB.connection.query(`USE information_schema;`);
 
         await new Promise((resolve, reject) => {
@@ -115,9 +115,7 @@ exports.getDatabasesMenuList = async (req, res, _) => {
                 }
             })
         })
-    });
+    }
 
-    setTimeout(() => {
-        return res.send({ success: databaseMenuList })
-    }, 1000)
+    return res.send({ success: databaseMenuList })
 }
