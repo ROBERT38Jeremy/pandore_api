@@ -1,101 +1,22 @@
-const { MysqlDB } = require("../../database/database")
-const { getConf } = require("../../utils/pandoreConf")
-const defaultHiddenDatabases = ['information_schema', 'mysql', 'performance_schema', 'sys'];
+const { DisplayDatabase } = require("./displayDatabase.methods")
 
 exports.getDatabaseStrucure = async (req, res, _) => {
-    const DB = MysqlDB.getInstance();
-    if (DB === null || DB?.connection === null) {
-        return res.send({
-            success: false,
-            error: 'Connection failed'
-        })
-    }
-    await DB.connection.query(`USE information_schema;`);
-
-    const result = await new Promise((resolve, reject) => {
-        DB.connection.query("SELECT * FROM `TABLES` WHERE `TABLE_SCHEMA` = ?;", [ req.params.database ], (err, result, fields) => {
-            if (err) {
-                return reject({
-                    success: false,
-                    error: err
-                });
-            } else {
-                return resolve({
-                    success: result,
-                    error: err
-                })
-            }
-        })
-    })
+    const result = await DisplayDatabase.getDatabaseStructure(req.params.database);
 
     return res.send(result)
 }
 
 exports.getDatabasesList = async (req, res, _) => {
-    const pandoreConf = await getConf();
-    const DB = MysqlDB.getInstance();
-    if (DB === null || DB?.connection === null) {
-        return res.send({
-            success: false,
-            error: 'Connection failed'
-        })
-    }
-    const disabledDatabase = pandoreConf?.conf?.databases?.hidden ?? defaultHiddenDatabases;
-    const result = await new Promise((resolve, reject) => {
-        DB.connection.query("SHOW DATABASES;", (err, result, fields) => {
-            if (err) {
-                return reject({
-                    success: false,
-                    error: err
-                })
-            }
-
-            return resolve({
-                success: result
-                    .filter((databaseName) => {
-                        return !disabledDatabase.includes(databaseName.Database)
-                    })
-                    .map((databaseName) => {
-                        return databaseName.Database
-                    })
-            })
-        })
-    })
+    const result = await DisplayDatabase.getDatabasesList();
 
     return res.send(result)
 }
 
 exports.getDatabasesMenuList = async (req, res, _) => {
-    const pandoreConf = await getConf();
-    const DB = MysqlDB.getInstance();
-    if (DB === null || DB?.connection === null) {
-        return res.send({
-            success: false,
-            error: 'Connection failed'
-        })
-    }
-    const databaseMenuList = {};
-    const disabledDatabase = pandoreConf?.conf?.databases?.hidden ?? defaultHiddenDatabases;
-    const databaseList = await new Promise((resolve, reject) => {
-        DB.connection.query("SHOW DATABASES;", (err, result, fields) => {
-            if (err) {
-                return reject({
-                    success: false,
-                    error: err
-                })
-            }
 
-            return resolve({
-                success: result
-                    .filter((databaseName) => {
-                        return !disabledDatabase.includes(databaseName.Database)
-                    })
-                    .map((databaseName) => {
-                        return databaseName.Database
-                    })
-            })
-        })
-    })
+    const databaseMenuList = {};
+    const DB = DisplayDatabase.getDBInstance();
+    const databaseList = await DisplayDatabase.getDatabasesList();
     if (databaseList?.success === false) {
         return res.send(databaseList)
     }
