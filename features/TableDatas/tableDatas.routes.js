@@ -1,6 +1,7 @@
 const router = require("express-promise-router")();
-const { insertTableDatas } = require("./tableDatas.controller")
+const { insertTableDatas, exportTableDatasToCSV } = require("./tableDatas.controller")
 
 router.route("/database/:databaseName/:tableName/insert").post(insertTableDatas);
+router.route("/database/:database/:table/export").get(exportTableDatasToCSV);
 
 module.exports = router;
