@@ -48,6 +48,8 @@ exports.insertTableDatas = async (req, res, _) => {
 
 exports.exportTableDatasToCSV = async (req, res, _) => {
     try {
+        const pandoreConf = await getConf();
+
         const { database, table } = req.params
         const DB = MysqlDB.getInstance();
         if (DB === null || DB?.connection === null) {
@@ -82,7 +84,7 @@ exports.exportTableDatasToCSV = async (req, res, _) => {
 
         if (resultDatas.success) {
             for(row of resultDatas.success) {
-                const csv = `${Object.values(row).map((e) => `"${e}"`).join(';')}\n`;
+                const csv = `${Object.values(row).map((e) => `"${e}"`).join(pandoreConf?.CSV?.defaultFormat?.valueSeparator ?? ';')}${pandoreConf?.CSV?.defaultFormat?.rowSeparator ?? "\n"}`;
                 try {
                     appendFileSync("../pandore_front/public/export.csv", csv);
                 } catch (error) {
