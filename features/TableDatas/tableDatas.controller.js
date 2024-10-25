@@ -82,7 +82,7 @@ exports.exportTableDatasToCSV = async (req, res, _) => {
 
         if (resultDatas.success) {
             for(row of resultDatas.success) {
-                const csv = `${Object.values(row).map((e) => `"${e}"`).join(',')}\n`;
+                const csv = `${Object.values(row).map((e) => `"${e}"`).join(';')}\n`;
                 try {
                     appendFileSync("../pandore_front/public/export.csv", csv);
                 } catch (error) {
