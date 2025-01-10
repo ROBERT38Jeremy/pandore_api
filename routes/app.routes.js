@@ -5,13 +5,25 @@ const tableDatasRoutes = require('../features/TableDatas/tableDatas.routes')
 const rawQueryRoutes = require('../features/RawQuery/rawQuery.routes')
 const userRoutes = require('../features/User/user.routes')
 const pandoreUserRoutes = require('../features/PandoreUser/pandoreUser.routes')
+const generalQueriesRoutes = require('../features/GeneralQueries/generalQueries.routes')
+const manageDatabasesRoutes = require('../features/ManageDatabases/manageDatabases.routes')
 
 const expressMiddlewareRoutes = (app) => {
 	app.get("/api", (_, res) => {
 		return res.status(200).json({ success: "Welcome to lamusee's API" });
 	});
 
-	app.use("/api/sql", [ConnectionRoutes, displayDatabaseRoutes, displayTableRoutes, tableDatasRoutes, rawQueryRoutes, userRoutes, pandoreUserRoutes]);
+	app.use("/api/sql", [
+        ConnectionRoutes,
+        displayDatabaseRoutes,
+        displayTableRoutes,
+        tableDatasRoutes,
+        rawQueryRoutes,
+        userRoutes,
+        pandoreUserRoutes,
+        generalQueriesRoutes,
+        manageDatabasesRoutes
+    ]);
 };
 
 module.exports = { expressMiddlewareRoutes };
